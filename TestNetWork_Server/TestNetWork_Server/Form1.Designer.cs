@@ -33,19 +33,23 @@
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label_ip = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(539, 25);
+            this.textBox1.Location = new System.Drawing.Point(422, 25);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(309, 433);
+            this.textBox1.Size = new System.Drawing.Size(426, 206);
             this.textBox1.TabIndex = 0;
             // 
             // button_start
             // 
-            this.button_start.Location = new System.Drawing.Point(422, 25);
+            this.button_start.Location = new System.Drawing.Point(422, 237);
             this.button_start.Name = "button_start";
             this.button_start.Size = new System.Drawing.Size(111, 33);
             this.button_start.TabIndex = 1;
@@ -79,11 +83,50 @@
             this.label2.TabIndex = 4;
             this.label2.Text = "Logs";
             // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(422, 276);
+            this.textBox3.Multiline = true;
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(426, 182);
+            this.textBox3.TabIndex = 5;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(610, 257);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(67, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Players state";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(352, 9);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(18, 13);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "ip:";
+            // 
+            // label_ip
+            // 
+            this.label_ip.AutoSize = true;
+            this.label_ip.Location = new System.Drawing.Point(376, 9);
+            this.label_ip.Name = "label_ip";
+            this.label_ip.Size = new System.Drawing.Size(88, 13);
+            this.label_ip.TabIndex = 8;
+            this.label_ip.Text = "255.255.255.255";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(860, 470);
+            this.Controls.Add(this.label_ip);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.textBox3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox2);
@@ -103,6 +146,10 @@
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label_ip;
     }
 }
 

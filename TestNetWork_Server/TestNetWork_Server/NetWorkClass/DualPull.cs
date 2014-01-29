@@ -6,34 +6,64 @@ using ClassesForSerialize;
 
 namespace TestNetWork_Server.NetWorkClass
 {
-    class DualPull
+    public class DualPull
     {
-        SomeText oldPull;
-        SomeText newPull;
+        PlayerInfo oldPull;
+        PlayerInfo newPull;
 
         public DualPull()
         {
-
+            oldPull = new PlayerInfo();
         }
-        public DualPull(SomeText basePull)
+        public DualPull(PlayerInfo basePull)
         {
             oldPull = basePull;
             newPull = null;
         }
 
-        public void setPull(SomeText obj)
+        //public void setPull(PlayerInfo obj)
+        //{
+        //    newPull = obj;
+        //}
+
+        //public PlayerInfo getPull()
+        //{
+        //    if (newPull == null)
+        //    {
+        //        return oldPull;
+        //    }
+
+        //    return newPull;
+        //}
+
+        public PlayerInfo Pull
         {
-            newPull = obj;
+            set 
+            {
+                this.newPull = value;
+
+                this.newPull.HP = oldPull.HP;
+            }
+            get 
+            { 
+                if (newPull == null)
+                {
+                    return oldPull;
+                }
+
+                return newPull;
+            }
         }
 
-        public SomeText getPull()
+        public PlayerInfo ClearPull()
         {
-            if (newPull == null)
+            if (this.newPull != null)
             {
-                return oldPull;
+                this.oldPull = this.newPull;
+                this.newPull = null;
             }
 
-            return newPull;
+            return this.oldPull;            
         }
     }
 }

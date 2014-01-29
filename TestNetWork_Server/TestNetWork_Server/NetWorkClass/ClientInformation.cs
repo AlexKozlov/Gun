@@ -7,18 +7,19 @@ using System.Net.Sockets;
 
 namespace TestNetWork_Server.NetWorkClass
 {
-    class ClientInformation
+    public class ClientInformation
     {
         public String PlayerName { get; set; }
         public IPAddress IpAddress { get; set; }
         public int Port { get; set; }
         public Socket PlayerHandler { get; set; }
 
-        public DualPull Pull { get; set; }
+        public DualPull DualPull { get; set; }
 
         public ClientInformation()
         {
-            Pull = new DualPull();
+            DualPull = new DualPull();
+            DualPull.Pull.HP = 100000;
         }
         public ClientInformation(String PlayerName, IPAddress IpAddress, int Port, Socket PlayerHandler)
         {
@@ -27,7 +28,7 @@ namespace TestNetWork_Server.NetWorkClass
             this.Port = Port;
             this.PlayerHandler = PlayerHandler;
 
-            Pull = new DualPull();
+            DualPull = new DualPull();
         }
 
 
