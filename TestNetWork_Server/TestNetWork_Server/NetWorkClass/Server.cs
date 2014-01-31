@@ -14,8 +14,10 @@ namespace TestNetWork_Server.NetWorkClass
 {
     class Server
     {
-        List<ClientInformation> Clients;
-        List<BulletInfo> Bullets;
+        //List<ClientInformation> Clients;
+        //List<BulletInfo> Bullets;
+
+        GameController gameController;
 
         /// <summary>
         /// стандартный порт для TCP а также начало портов для UDP портов
@@ -46,8 +48,10 @@ namespace TestNetWork_Server.NetWorkClass
 
         public Server(AddLogs addClient, AddLogs addLogs, AddState addState)
         {
-            Clients = new List<ClientInformation>();
-            Bullets = new List<BulletInfo>();
+            //Clients = new List<ClientInformation>();
+            //Bullets = new List<BulletInfo>();
+
+            gameController = new GameController();
 
             port = 5000;
             portIncrement = 1;
@@ -83,6 +87,8 @@ namespace TestNetWork_Server.NetWorkClass
             listener.Bind(localEndPoint);
             listener.Listen(10);
 
+            startGameThread();
+
             while (true)
             {
                 Socket handler = listener.Accept();
@@ -102,13 +108,72 @@ namespace TestNetWork_Server.NetWorkClass
 
                 ClientInformation newClient = new ClientInformation(obj.username, clientIPAddress,
                                                     privatePort, handler);
-                newClient.DualPull.Pull = new PlayerInfo();                
+
+                newClient.DualPull.Pull = new PlayerInfo();
+                newClient.DualPull.Pull.HP = 100;
 
                 lock (this.ClientsLock)
                 {
-                    this.Clients.Add(newClient);
+                    this.gameController.Clients.Add(newClient);
+                }
+
+                startGame(newClient);
+            }
+        }
+
+        /// <summary>
+        /// Функция рассылает всем клиентам сообщение о начале игры
+        /// </summary>
+        public void startGame()
+        {
+            //reciveFromPlayersThread.Start();
+
+            StartPacket startPacket = new StartPacket();
+
+            startPacket.username = "Go";
+
+            // обходим всех клиентов и каждому посылаем сообщение
+            lock (this.ClientsLock)
+            {
+                foreach (ClientInformation client in gameController.Clients)
+                {
+                    startPacket.port = client.Port;
+
+                    byte[] bytes = SerializeB.serialize(startPacket);
+
+                    client.PlayerHandler.Send(bytes);
                 }
             }
+
+            //sendToPlayersThread.Start();
+        }
+
+        /// <summary>
+        /// Функция рассылает конкретному клиенту сообщение о начале игры
+        /// </summary>
+        public void startGame(ClientInformation client)
+        {
+            Thread.Sleep(1500);
+
+            StartPacket startPacket = new StartPacket();
+
+            startPacket.username = "Go";
+
+            startPacket.port = client.Port;
+
+            byte[] bytes = SerializeB.serialize(startPacket);
+
+            client.PlayerHandler.Send(bytes);
+
+        }
+
+        /// <summary>
+        /// Запуск потоков для отправи и приема сообщений от клиентов
+        /// </summary>
+        private void startGameThread()
+        {
+            reciveFromPlayersThread.Start();
+            sendToPlayersThread.Start();
         }
 
         /// <summary>
@@ -146,20 +211,20 @@ namespace TestNetWork_Server.NetWorkClass
                 {
                     int i = 0;
 
-                    while ( i < Clients.Count) 
+                    while (i < gameController.Clients.Count) 
                     {
-                        if(Clients[i].IpAddress.ToString() == clientIPAddress.ToString() && Clients[i].Port == clientPort)
+                        if (gameController.Clients[i].IpAddress.ToString() == clientIPAddress.ToString() && gameController.Clients[i].Port == clientPort)
                             break;
                         i++; 
                     }
 
-                    if (i != Clients.Count)
+                    if (i != gameController.Clients.Count)
                     {
-                        Clients[i].DualPull.Pull = obj.PlayerInfo;
+                        gameController.Clients[i].DualPull.Pull = obj.PlayerInfo;
 
                         if (obj.BulletInfo != null)
                         {
-                            Bullets.Add(obj.BulletInfo);
+                            gameController.Bullets.Add(obj.BulletInfo);
                         }
                     }
                     else 
@@ -168,7 +233,7 @@ namespace TestNetWork_Server.NetWorkClass
                     }
                 }
 
-                addState(Clients);
+                addState(gameController.Clients);
 
             }
         }
@@ -187,14 +252,12 @@ namespace TestNetWork_Server.NetWorkClass
                     PacketFromServer toClient = new PacketFromServer();
 
                     // обновляем положение патронов и убираем вышедшые за пределы
-                    BulletUpdate();
-
                     // Расчет урона патронов и их удаление
-                    DamageCalculation();
+                    gameController.GameStateUpdate();
 
                     // Изымаем текущие позиции игроков, Удаляет игроков из списка с hp = 0
-                    toClient.PlayersInfo = GetPlayerInfo();
-                    toClient.BulletInfo = Bullets;
+                    toClient.PlayersInfo = gameController.GetPlayerInfo();
+                    toClient.BulletInfo = gameController.Bullets;
 
                     // серелизуес пакет в байты
                     byte[] bytes = SerializeB.serialize(toClient);
@@ -205,69 +268,70 @@ namespace TestNetWork_Server.NetWorkClass
             }
         }
 
-        /// <summary>
-        /// Функция рассылает всем клиентам сообщение о начале игры
-        /// </summary>
-        public void startGame()
-        {
-            reciveFromPlayersThread.Start();
+        ///// <summary>
+        ///// Обновляем положение патронов и убираем вышедшые за пределы
+        ///// </summary>
+        //private void BulletUpdate()
+        //{
+        //    foreach (BulletInfo bullet in Bullets)
+        //    {
+        //        bullet.move();
+        //    }
 
-            StartPacket startPacket = new StartPacket();
+        //    List<BulletInfo> newBullets = new List<BulletInfo>();
 
-            startPacket.username = "Go";
+        //    foreach (BulletInfo bullet in Bullets)
+        //    {
+        //        if (bullet.Position.X < 800 && bullet.Position.X > -2)
+        //        {
+        //            newBullets.Add(bullet);
+        //        }
+        //    }
 
-            // обходим всех клиентов и каждому посылаем сообщение
-            lock (this.ClientsLock)
-            {
-                foreach (ClientInformation client in Clients)
-                {
-                    startPacket.port = client.Port;
-
-                    byte[] bytes = SerializeB.serialize(startPacket);
-
-                    client.PlayerHandler.Send(bytes);
-                }
-            }
-
-            sendToPlayersThread.Start();
-        }
-
-        /// <summary>
-        /// Обновляем положение патронов и убираем вышедшые за пределы
-        /// </summary>
-        private void BulletUpdate()
-        {
-            foreach (BulletInfo bullet in Bullets)
-            {
-                bullet.move();
-            }
-
-            List<BulletInfo> newBullets = new List<BulletInfo>();
-
-            foreach (BulletInfo bullet in Bullets)
-            {
-                if (bullet.Position.X < 800 && bullet.Position.X > -2)
-                {
-                    newBullets.Add(bullet);
-                }
-            }
-
-            Bullets = newBullets;        
-        }
+        //    Bullets = newBullets;        
+        //}
 
         ///// <summary>
-        ///// Изымаем текущие позиции игроков
+        ///// Расчет урона патронов и их удаление
         ///// </summary>
-        ///// <returns> результат из пулов всех игроов</returns>
-        //private List<PlayerInfo> GetPlayerInfo()
+        //private void DamageCalculation()
         //{
+        //    for (int i = 0; i < Bullets.Count; i++)
+        //    {
+        //        Rectangle obj = new Rectangle((int)Bullets[i].Position.X, (int)Bullets[i].Position.Y, 1, 1);
+
+        //        for (int j = 0; j < Clients.Count; j++)
+        //        {
+        //            if (obj.Intersects(Clients[j].DualPull.Pull.Rectangle) == true)
+        //            {
+        //                if (Clients[j].DualPull.Pull.teamNumber != Bullets[i].teamNumber)
+        //                {
+        //                    if (Clients[j].DualPull.Pull.HP > 0)
+        //                    {
+        //                        Clients[j].DualPull.Pull.HP -= Bullets[i].Damage;
+        //                        Bullets.RemoveAt(i);
+        //                        i--;
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Изымаем текущие позиции игроков, Удаляет игроков из списка с hp = 0
+        ///// </summary>
+        //private List<PlayerInfo> GetPlayerInfo()
+        //{ 
         //    List<PlayerInfo> playerInfoList = new List<PlayerInfo>();
 
-        //    foreach (ClientInformation client in Clients)
+        //    foreach(ClientInformation client in Clients)
         //    {
-        //        PlayerInfo obj = client.DualPull.Pull;
-
-        //        playerInfoList.Add(obj);
+        //        if(client.DualPull.Pull.HP > 0)
+        //        {
+        //            playerInfoList.Add(client.DualPull.ClearPull());
+        //        }
         //    }
 
         //    return playerInfoList;
@@ -279,7 +343,7 @@ namespace TestNetWork_Server.NetWorkClass
         /// <param name="bytes"> Байты для посылки </param>
         private void SendToPlayers(byte[] bytes)
         {
-            foreach (ClientInformation client in Clients)
+            foreach (ClientInformation client in gameController.Clients)
             {
                 DnsEndPoint remoteEP = new DnsEndPoint(client.IpAddress.ToString(), client.Port);
 
@@ -296,52 +360,6 @@ namespace TestNetWork_Server.NetWorkClass
                 }
                 socketUDP.Send(bytes);
             }
-        }
-
-        /// <summary>
-        /// Расчет урона патронов и их удаление
-        /// </summary>
-        private void DamageCalculation()
-        {
-            for (int i = 0; i < Bullets.Count; i++)
-            {
-                Rectangle obj = new Rectangle((int)Bullets[i].Position.X, (int)Bullets[i].Position.Y, 1, 1);
-
-                for (int j = 0; j < Clients.Count; j++)
-                {
-                    if (obj.Intersects(Clients[j].DualPull.Pull.Rectangle) == true)
-                    {
-                        if (Clients[j].DualPull.Pull.teamNumber != Bullets[i].teamNumber)
-                        {
-                            if (Clients[j].DualPull.Pull.HP > 0)
-                            {
-                                Clients[j].DualPull.Pull.HP -= Bullets[i].Damage;
-                                Bullets.RemoveAt(i);
-                                i--;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Изымаем текущие позиции игроков, Удаляет игроков из списка с hp = 0
-        /// </summary>
-        private List<PlayerInfo> GetPlayerInfo()
-        { 
-            List<PlayerInfo> playerInfoList = new List<PlayerInfo>();
-
-            foreach(ClientInformation client in Clients)
-            {
-                if(client.DualPull.Pull.HP > 0)
-                {
-                    playerInfoList.Add(client.DualPull.ClearPull());
-                }
-            }
-
-            return playerInfoList;
         }
     }
 }

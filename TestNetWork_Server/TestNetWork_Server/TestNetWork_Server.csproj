@@ -59,6 +59,7 @@
     </Compile>
     <Compile Include="NetWorkClass\ClientInformation.cs" />
     <Compile Include="NetWorkClass\DualPull.cs" />
+    <Compile Include="NetWorkClass\GameController.cs" />
     <Compile Include="NetWorkClass\Server.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

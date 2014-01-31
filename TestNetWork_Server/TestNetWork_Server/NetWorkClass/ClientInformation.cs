@@ -16,11 +16,14 @@ namespace TestNetWork_Server.NetWorkClass
 
         public DualPull DualPull { get; set; }
 
+        CoolDown Respown { get; set; }
+
         public ClientInformation()
         {
             DualPull = new DualPull();
-            DualPull.Pull.HP = 100000;
+            DualPull.Pull.HP = 100;
         }
+
         public ClientInformation(String PlayerName, IPAddress IpAddress, int Port, Socket PlayerHandler)
         {
             this.PlayerName = PlayerName;
@@ -31,6 +34,42 @@ namespace TestNetWork_Server.NetWorkClass
             DualPull = new DualPull();
         }
 
+        public bool IsLive()
+        {
+            if (this.DualPull.Pull.HP > 0)
+            {
+                return true;
+            }
+            else
+            {
+                if (Respown == null)
+                {
+                    Respown = new CoolDown(100);
+                    return false;
+                }
+                else 
+                {
+                    Respown.addTime();
 
+                    if (Respown.isReload() == true)
+                    {
+                        Respown = null;
+
+                        this.DualPull.Pull.HP = 100;
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }            
+        }
+        public void Dead()
+        {
+            Respown = new CoolDown(100);
+            this.DualPull.Pull.HP = 0;
+        }
     }
 }

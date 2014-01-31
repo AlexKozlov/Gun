@@ -47,11 +47,12 @@ namespace ClassesForSerialize
     public class Player
     {
         public PlayerInfo PlayerInfo { get; set; }
+        public CoolDown CoolDown { get; set; }
 
         public Player()
         {
             PlayerInfo = new PlayerInfo();
-
+            CoolDown = new CoolDown(GameConstants.reloadTime);
             PlayerInfo.Direction = 2;
         }
 
@@ -116,12 +117,10 @@ namespace ClassesForSerialize
         public Rectangle Rectangle { get; set; }
         public int HP { get; set; }
         public int teamNumber { get; set; }
-
         public PlayerInfo()
         {
             Speed = GameConstants.moveSpeed;
             VerticalSpeed = 0;
-            HP = 100;
             Position = new Vector2(200, 130);
         }
     }
@@ -139,12 +138,13 @@ namespace ClassesForSerialize
         public static float moveSpeed = 5f;
         public static float bulletSpeed = 10f;
         public static int Damage = 10;
+        public static int reloadTime = 40;
     }
 
 
     public class Bullet
     {
-        // public Texture2D Texture { get; set; }
+        //public Texture2D Texture { get; set; }
         public BulletInfo BulletInfo { get; set; }
 
         public Bullet()
@@ -180,6 +180,58 @@ namespace ClassesForSerialize
         public void move()
         {
             Position = new Vector2(Position.X + Speed, Position.Y);
+        }
+    }
+
+
+
+
+    public class CoolDown
+    {
+        int counter;
+        int reloadTime;
+
+        public CoolDown()
+        {
+            counter = 0;
+            reloadTime = 0;
+        }
+        public CoolDown(int reloadTime)
+        {
+            counter = 0;
+            this.reloadTime = reloadTime;
+        }
+
+        public bool isReload()
+        {
+            if (counter >= reloadTime)
+            {
+                return true;
+            }
+            return false;
+
+        }
+        public void addTime()
+        {
+            //if (counter < reloadTime)
+            //{
+            counter++;
+            //}
+        }
+        public void clear()
+        {
+            counter = 0;
+        }
+
+        public int Counter
+        {
+            set { this.counter = value; }
+            get { return this.counter; }
+        }
+        public int ReloadTime
+        {
+            set { this.reloadTime = value; }
+            get { return this.reloadTime; }
         }
     }
 }
