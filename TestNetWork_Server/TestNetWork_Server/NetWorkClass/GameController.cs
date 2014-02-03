@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using ClassesForSerialize;
 using Microsoft.Xna.Framework;
+using System.Threading;
+using TestNetWork_Server.serialize;
+using System.Windows.Forms;
 
 namespace TestNetWork_Server.NetWorkClass
 {
@@ -12,10 +15,22 @@ namespace TestNetWork_Server.NetWorkClass
         public List<ClientInformation> Clients { get; set; }
         public List<BulletInfo> Bullets { get; set; }
 
+        /// <summary>
+        /// Мьютекс для доступа к списку учетных записей
+        /// </summary>
+        public Object ClientsLock { get; set; }
+
+        Thread CheckDisconectThread;
+
         public GameController()
         {
             Clients = new List<ClientInformation>();
             Bullets = new List<BulletInfo>();
+
+            ClientsLock = new object();
+
+            CheckDisconectThread = new Thread(CheckDisconect);
+            CheckDisconectThread.Start();
         }
 
         /// <summary>
@@ -100,6 +115,45 @@ namespace TestNetWork_Server.NetWorkClass
             }
 
             return playerInfoList;
+        }
+
+        /// <summary>
+        /// Проверяет каждые 5 с с помощью тср активен ли клиет, в случае ошибки удоляет его 
+        /// </summary>
+        private void CheckDisconect()
+        {
+            while (true)
+            {
+                Thread.Sleep(5000);
+
+                for (int i = 0; i < Clients.Count; i++)
+                {
+                    StartPacket startPacket = new StartPacket();
+
+                    startPacket.username = "ti tyt?";
+
+                    startPacket.port = Clients[i].Port;
+
+                    byte[] bytes = SerializeB.serialize(startPacket);
+
+                    try
+                    {
+                        Clients[i].PlayerHandler.Send(bytes);
+                    }
+                    catch (Exception e)
+                    {
+                        ClientInformation obj = Clients[i];
+
+                        lock (ClientsLock)
+                        {
+                            Clients.RemoveAt(i);
+                            i--;
+                        }
+
+                        MessageBox.Show("on ne tyt: [" + obj.Port + "] " + e.ToString());
+                    }
+                }
+            }
         }
     }
 }

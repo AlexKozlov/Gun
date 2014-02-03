@@ -22,6 +22,8 @@ namespace TestNetWork_Server.NetWorkClass
         {
             DualPull = new DualPull();
             DualPull.Pull.HP = 100;
+
+            //Disconect = new CoolDown(5000);
         }
 
         public ClientInformation(String PlayerName, IPAddress IpAddress, int Port, Socket PlayerHandler)
@@ -36,36 +38,37 @@ namespace TestNetWork_Server.NetWorkClass
 
         public bool IsLive()
         {
-            if (this.DualPull.Pull.HP > 0)
+            if (Respown == null)
             {
-                return true;
-            }
-            else
-            {
-                if (Respown == null)
+                if (this.DualPull.Pull.HP > 0)
+                {
+                    return true;
+                }
+                else
                 {
                     Respown = new CoolDown(100);
                     return false;
                 }
-                else 
+            }
+            else 
+            {
+                Respown.addTime();
+
+                if (Respown.isReload() == true)
                 {
-                    Respown.addTime();
+                    Respown = null;
 
-                    if (Respown.isReload() == true)
-                    {
-                        Respown = null;
+                    this.DualPull.Pull.HP = 100;
 
-                        this.DualPull.Pull.HP = 100;
-
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    return true;
                 }
-            }            
+                else
+                {
+                    return false;
+                }
+            }                        
         }
+
         public void Dead()
         {
             Respown = new CoolDown(100);

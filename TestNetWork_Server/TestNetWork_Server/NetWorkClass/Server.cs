@@ -28,11 +28,6 @@ namespace TestNetWork_Server.NetWorkClass
         /// </summary>
         int portIncrement;
 
-        /// <summary>
-        /// Мьютекс для доступа к списку учетных записей
-        /// </summary>
-        Object ClientsLock;
-
         Thread connectionPlayersThread;
         Thread reciveFromPlayersThread;
         Thread sendToPlayersThread;
@@ -58,7 +53,7 @@ namespace TestNetWork_Server.NetWorkClass
 
             timeTick = 20;
 
-            ClientsLock = new object();
+            //ClientsLock = new object();
 
             this.addClient = addClient;
             this.addLogs = addLogs;
@@ -112,68 +107,13 @@ namespace TestNetWork_Server.NetWorkClass
                 newClient.DualPull.Pull = new PlayerInfo();
                 newClient.DualPull.Pull.HP = 100;
 
-                lock (this.ClientsLock)
+                lock (gameController.ClientsLock)
                 {
                     this.gameController.Clients.Add(newClient);
                 }
 
                 startGame(newClient);
             }
-        }
-
-        /// <summary>
-        /// Функция рассылает всем клиентам сообщение о начале игры
-        /// </summary>
-        public void startGame()
-        {
-            //reciveFromPlayersThread.Start();
-
-            StartPacket startPacket = new StartPacket();
-
-            startPacket.username = "Go";
-
-            // обходим всех клиентов и каждому посылаем сообщение
-            lock (this.ClientsLock)
-            {
-                foreach (ClientInformation client in gameController.Clients)
-                {
-                    startPacket.port = client.Port;
-
-                    byte[] bytes = SerializeB.serialize(startPacket);
-
-                    client.PlayerHandler.Send(bytes);
-                }
-            }
-
-            //sendToPlayersThread.Start();
-        }
-
-        /// <summary>
-        /// Функция рассылает конкретному клиенту сообщение о начале игры
-        /// </summary>
-        public void startGame(ClientInformation client)
-        {
-            Thread.Sleep(1500);
-
-            StartPacket startPacket = new StartPacket();
-
-            startPacket.username = "Go";
-
-            startPacket.port = client.Port;
-
-            byte[] bytes = SerializeB.serialize(startPacket);
-
-            client.PlayerHandler.Send(bytes);
-
-        }
-
-        /// <summary>
-        /// Запуск потоков для отправи и приема сообщений от клиентов
-        /// </summary>
-        private void startGameThread()
-        {
-            reciveFromPlayersThread.Start();
-            sendToPlayersThread.Start();
         }
 
         /// <summary>
@@ -207,7 +147,7 @@ namespace TestNetWork_Server.NetWorkClass
 
                 addLogs("resive player[" + clientIPAddress.ToString() + ":" + clientPort + "]");
 
-                lock (this.ClientsLock)
+                lock (gameController.ClientsLock)
                 {
                     int i = 0;
 
@@ -247,7 +187,7 @@ namespace TestNetWork_Server.NetWorkClass
             {
                 Thread.Sleep(timeTick);                
 
-                lock (this.ClientsLock)
+                lock (gameController.ClientsLock)
                 {
                     PacketFromServer toClient = new PacketFromServer();
 
@@ -360,6 +300,61 @@ namespace TestNetWork_Server.NetWorkClass
                 }
                 socketUDP.Send(bytes);
             }
+        }
+
+        /// <summary>
+        /// Функция рассылает всем клиентам сообщение о начале игры
+        /// </summary>
+        public void startGame()
+        {
+            //reciveFromPlayersThread.Start();
+
+            StartPacket startPacket = new StartPacket();
+
+            startPacket.username = "Go";
+
+            // обходим всех клиентов и каждому посылаем сообщение
+            lock (gameController.ClientsLock)
+            {
+                foreach (ClientInformation client in gameController.Clients)
+                {
+                    startPacket.port = client.Port;
+
+                    byte[] bytes = SerializeB.serialize(startPacket);
+
+                    client.PlayerHandler.Send(bytes);
+                }
+            }
+
+            //sendToPlayersThread.Start();
+        }
+
+        /// <summary>
+        /// Функция рассылает конкретному клиенту сообщение о начале игры
+        /// </summary>
+        public void startGame(ClientInformation client)
+        {
+            Thread.Sleep(1500);
+
+            StartPacket startPacket = new StartPacket();
+
+            startPacket.username = "Go";
+
+            startPacket.port = client.Port;
+
+            byte[] bytes = SerializeB.serialize(startPacket);
+
+            client.PlayerHandler.Send(bytes);
+
+        }
+
+        /// <summary>
+        /// Запуск потоков для отправи и приема сообщений от клиентов
+        /// </summary>
+        private void startGameThread()
+        {
+            reciveFromPlayersThread.Start();
+            sendToPlayersThread.Start();
         }
     }
 }
